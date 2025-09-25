@@ -10,6 +10,7 @@ import threading
 import itertools
 import sys
 import time
+import streamlit as st
 from collections import Counter
 
 
@@ -38,7 +39,7 @@ def _spinner (msg: str, stop_event: threading.Event):
 #  Call Gemini API with spinner
 #  ---------------------------------------------------
 def call_gemini_withspinner(ai_prompt: str,
-                            model: str = "gemini-1.5-flash-latest",
+                            model: str = "gemini-1.5-flash",
                             timeout: int = 60) -> dict:
 
     """
@@ -103,14 +104,9 @@ def call_gemini_withspinner(ai_prompt: str,
 # ----------------------------------------------------
 # Analyze resume vs job description
 # ----------------------------------------------------
-def generate_career_recommendations():
+def generate_career_recommendations(my_resume_text, job_description_text):
 
-    with open ("my_resume.txt", "r") as file:
-        my_resume_text = file.read()
-
-    # Open the job_description.txt file and read its contents
-    with open ("job_description.txt", "r") as file:
-        job_description_text = file.read()
+    
 
     # Tokenize text
     resume_words = re.findall (r'\b\w+\b', my_resume_text.lower())
@@ -177,10 +173,11 @@ def recommend_jobs (matched_keywords):
 # Generate roadmap for chosen career
 # ------------------------------------------------
 def generate_roadmap (selected_job):
-    api_key = os.getenv ("GOOGLE_API_KEY")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
-    
-    ai_prompt = f"Act as a professional career counselor. Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap including the necessary skills, credentials, and projects to become qualified for the job."
+    ai_prompt = ( 
+        f"Act as a professional career counselor." 
+        f"Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap "
+        f"including the necessary skills, credentials, and projects to become qualified for the job."
+    )
     result = call_gemini_withspinner(ai_prompt)
 
     if result["status"] == "ok":
@@ -196,7 +193,31 @@ def generate_roadmap (selected_job):
 # ------------------------------------------------
 # Run the program
 # ------------------------------------------------
-keywords = generate_career_recommendations()
-recommendations_text = recommend_jobs (keywords)
-selected_job = input ("Which career would you like a roadmap for?")
-roadmap_text = generate_roadmap (selected_job)
+if __name__ == "__main__":
+    st.title("Resume Analyzer")
+
+    resume_text = st.text_area("Paste your resume text here:")
+
+    if st.button("Analyze Resume"):
+        # Extract keywords just from the resume
+        matched_keywords = re.findall(r'\b\w+\b', resume_text.lower())
+        matched_keywords = [w for w in matched_keywords if w not in STOP_WORDS]
+
+        st.subheader("Extracted Keywords from Resume")
+        st.write(matched_keywords)
+
+        recommendations = recommend_jobs(matched_keywords)
+        if recommendations:
+            st.subheader("Job Recommendations")
+            st.write(recommendations)
+
+            # Split recommendations into lines for dropdown
+            job_options = [line.strip("-• ") for line in recommendations.split("\n") if line.strip()]
+
+            selected_job = st.selectbox("Choose a job title for a roadmap:", job_options)
+
+            if st.button("Generate Roadmap"):
+                roadmap = generate_roadmap(selected_job)
+                if roadmap:
+                    st.subheader(f"Roadmap for {selected_job}")
+                    st.write(roadmap)

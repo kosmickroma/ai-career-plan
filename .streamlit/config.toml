@@ -1,0 +1,13 @@
+[theme]
+# Primary accent color (used for buttons, links, etc.)
+primaryColor="#3297a8" # A cool, noticeable blue/teal
+
+# Background colors
+backgroundColor="#0e1117" # Very dark background
+secondaryBackgroundColor="#262730" # Slightly lighter dark gray for sidebars/boxes
+
+# Text color
+textColor="#FAFAFA" # Bright white text for contrast
+
+# Font style
+font="sans serif"

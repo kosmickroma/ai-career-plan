@@ -269,16 +269,14 @@ def generate_pdf(roadmap_text, job_title="Career Roadmap"):
     return pdf
 
 
-#############################################################
-#############################################################
+
+#
 
 if __name__ == "__main__":
     # Changed title to reflect new functionality
     st.title("Career Compass & Resume Analyzer")
     
-    #-------------------------------------------------
     # 1. Initialize session state to manage widget persistence
-    # ------------------------------------------------
     if 'job_options' not in st.session_state:
         st.session_state['job_options'] = []
     if 'recommendations' not in st.session_state:
@@ -289,15 +287,6 @@ if __name__ == "__main__":
         st.session_state['roadmap_text'] = ""
     if 'selected_job_for_roadmap' not in st.session_state:
         st.session_state['selected_job_for_roadmap'] = ""
-
-    # NEW: Keep inputs persistent
-    if "resume_text" not in st.session_state:
-        st.session_state["resume_text"] = ""
-    if "pasted_text" not in st.session_state:
-        st.session_state["pasted_text"] = ""
-    if "target_career_input" not in st.session_state:
-        st.session_state["target_career_input"] = ""
-
 
     # ------------------------------------------------
     # 2. Implement Tab Structure (Quick option first for better UX)
@@ -488,30 +477,12 @@ if st.session_state['roadmap_text']:
         roadmap_text,
         job_title=st.session_state['selected_job_for_roadmap']
     )
-    col1, col2 = st.columns (2)
 
-    with col1:
-        st.download_button(
-            label="📥 Download Full Roadmap as PDF",
-            data=pdf_bytes,
-            file_name=f"{st.session_state['selected_job_for_roadmap'].replace(' ', '_')}_Career_Roadmap.pdf",
-            mime="application/pdf",
-            key="download_button_pdf"
+    st.download_button(
+        label="📥 Download Full Roadmap as PDF",
+        data=pdf_bytes,
+        file_name=f"{st.session_state['selected_job_for_roadmap'].replace(' ', '_')}_Career_Roadmap.pdf",
+        mime="application/pdf",
+        key="download_button_pdf"
     )
-    with col2:
-        if st.button("🔄 Start Over"):
-            # Clear only the keys we care about
-            keys_to_clear = [
-                "job_options",
-                "recommendations",
-                "resume_analyzed",
-                "roadmap_text",
-                "selected_job_for_roadmap",
-                "resume_text",
-                "pasted_text",
-                "target_career_input",
-            ]
-            for key in keys_to_clear:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
+

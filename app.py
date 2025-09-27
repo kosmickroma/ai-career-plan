@@ -178,7 +178,7 @@ def generate_roadmap (selected_job):
     ai_prompt = ( 
         f"Act as a professional career counselor." 
         f"**TASK 1: INTRODUCTION** "
-        f"Write a concise, encouraging introductory paragraph (2-3 sentences max) that sets the stage for the roadmp. Do not title or number this paragraph."
+        f"Write a concise, encouraging introductory paragraph (2-3 sentences max) that sets the stage for the roadmap. Do not title or number this paragraph."
 
         f"**TASK 2: ROADMAP PHASES** " 
         f"Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap "
@@ -573,7 +573,9 @@ if __name__ == "__main__":
             # No skills available (dry-run / API failure)
             st.info("No skills list available for this job (API may be in dry-run mode or the lookup failed). ")
 
-    if st.button("Generate Roadmap", key="roadmap_button"):
+    #Roadmap button (only shows after job rec in tab 2)
+    if st.session_state['resume_analyzed'] and st.session_state['job_options']:
+        if st.button("Generate Roadmap", key="roadmap_button"):
 
             with st.status(f"Generating career roadmap for **{selected_job}**...", expanded=True):
                 roadmap = generate_roadmap(selected_job)
@@ -581,7 +583,6 @@ if __name__ == "__main__":
             if roadmap:
                 st.session_state['roadmap_text'] = roadmap
                 st.session_state['selected_job_for_roadmap'] = selected_job
-
                 st.rerun()
 
 # This block displays the final roadmap for BOTH tabs

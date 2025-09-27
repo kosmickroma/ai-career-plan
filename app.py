@@ -177,6 +177,10 @@ def recommend_jobs (matched_keywords):
 def generate_roadmap (selected_job):
     ai_prompt = ( 
         f"Act as a professional career counselor." 
+        f"**TASK 1: INTRODUCTION** "
+        f"Write a concise, encouraging introductory paragraph (2-3 sentences max) that sets the stage for the roadmp. Do not title or number this paragraph."
+
+        f"**TASK 2: ROADMAP PHASES** " 
         f"Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap "
         f"including the necessary skills, credentials, and projects to become qualified for the job."
         f"Break it into **clear phases** (Phase 1, Phase 2, Phase, 3, etc.), each with a short title and details. "
@@ -590,12 +594,18 @@ if st.session_state['roadmap_text']:
     phases = re.split(r'(Phase\s+\d+:)', roadmap_text)
 
     if len(phases) > 1:
+        # Capture the initial text (The introduction is in phases[0])
+        intro_text = phases[0].strip()
+        if intro_text:
+            st.markdown(intro_text)
+            st.markdown("---") 
+
         structured_phases = []
         for i in range(1, len(phases), 2):
             title = phases[i].strip()
             content = phases[i+1].strip() if i+1 < len(phases) else ""
             structured_phases.append((title, content))
-
+        
         # Loop through phases
         for idx, (title, content) in enumerate(structured_phases):
             with st.expander(title, expanded=(idx == 0)):  # Phase 1 auto-open

@@ -102,15 +102,6 @@ def call_gemini_withspinner(ai_prompt: str,
     except ValueError:
         # Non-json response
         return {"status": "ok", "response_text": resp.text}
-# -----------------------------------------------------
-# Callbacks for 'Enter' key behavior
-# -----------------------------------------------------
-def _on_target_career_enter():
-    st.session_state['goal_roadmap_trigger'] = True
-
-def _on_resume_enter():
-    st.session_state['analyze_trigger'] = True
-
 
 # ----------------------------------------------------
 # Analyze resume vs job description
@@ -427,17 +418,10 @@ if __name__ == "__main__":
         st.subheader("Generate a Roadmap for Any Career Goal")
         st.info("No resume needed! Just tell the AI what you want to be.")
         
-        target_career = st.text_input(
-            "Enter your desired job title or career:",
-            key="target_career_input",
-            on_change=_on_target_career_enter
-        )
+        target_career = st.text_input("Enter your desired job title or career:", key="target_career_input")
         
-        
-        
-        if st.button("Generate Goal Roadmap", key="goal_roadmap_button") or st.session_state.get("goal_roadmap_trigger"):
-            st.session_state['goal_roadmap_trigger'] = False #reset after Enter key press
-
+        if st.button("Generate Goal Roadmap", key="goal_roadmap_button"):
+            
             if not target_career.strip():
                 st.error("Please enter a job title to generate a roadmap.")
                 st.stop()
@@ -473,10 +457,7 @@ if __name__ == "__main__":
         st.write("**...OR...**")
 
         # 3 Text Area (Paste/Type)
-        pasted_text = st.text_area("Option 2: Paste or type your resume text here:",
-                                   key="resume_text_area",
-                                   on_change=_on_resume_enter
-                                )
+        pasted_text = st.text_area("Option 2: Paste or type your resume text here:")
         
         # 4 Logic to determine the final resume_text
         if uploaded_file is not None:
@@ -505,8 +486,7 @@ if __name__ == "__main__":
             resume_text = pasted_text
             
         # This button triggers the resume analysis logic
-        if st.button("Analyze Resume", key="analyze_button") or st.session_state.get("analyze_trigger"):
-            st.session_state['analyze_trigger'] = False # reset after Enter key press
+        if st.button("Analyze Resume", key="analyze_button"):
             # Check for input
             if not resume_text:
                 st.error("Please upload a file or paste your resume text to analyze.")

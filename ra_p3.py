@@ -102,15 +102,6 @@ def call_gemini_withspinner(ai_prompt: str,
     except ValueError:
         # Non-json response
         return {"status": "ok", "response_text": resp.text}
-# -----------------------------------------------------
-# Callbacks for 'Enter' key behavior
-# -----------------------------------------------------
-def _on_target_career_enter():
-    st.session_state['goal_roadmap_trigger'] = True
-
-def _on_resume_enter():
-    st.session_state['analyze_trigger'] = True
-
 
 # ----------------------------------------------------
 # Analyze resume vs job description
@@ -163,10 +154,12 @@ def recommend_jobs (matched_keywords):
     api_key = os.getenv ("GOOGLE_API_KEY")
 
     ai_prompt = (
-        f"Act as a professional career counselor."
-        f"Given a resume with the following keywords: {matched_keywords},"
-        f"recommend a few related job titles for a career changer with this background."
-        f"Be concise and provide a list of 3-5 titles."
+        f"Act as a professional career counselor." 
+        f"Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap "
+        f"including the necessary skills, credentials, and projects to become qualified for the job."
+        f"Break it into **clear phases** (Phase 1, Phase 2, Phase, 3, etc.), each with a short title and details. "
+        f"**Phase 1 should be titled 'Foundational Preparation' or 'Setting the Stage' and must serve as a brief introduction and overview for the entire roadmap before diving into specific steps.**" # Modified Phase 1 instruction
+        f"Format it so each phase starts with 'Phase X: [title]'."
     )
     result = call_gemini_withspinner(ai_prompt)
     
@@ -186,10 +179,6 @@ def recommend_jobs (matched_keywords):
 def generate_roadmap (selected_job):
     ai_prompt = ( 
         f"Act as a professional career counselor." 
-        f"**TASK 1: INTRODUCTION** "
-        f"Write a concise, encouraging introductory paragraph (2-3 sentences max) that sets the stage for the roadmap. Do not title or number this paragraph."
-
-        f"**TASK 2: ROADMAP PHASES** " 
         f"Given the goal of becoming a {selected_job}, provide a step-by-step career roadmap "
         f"including the necessary skills, credentials, and projects to become qualified for the job."
         f"Break it into **clear phases** (Phase 1, Phase 2, Phase, 3, etc.), each with a short title and details. "
@@ -427,17 +416,10 @@ if __name__ == "__main__":
         st.subheader("Generate a Roadmap for Any Career Goal")
         st.info("No resume needed! Just tell the AI what you want to be.")
         
-        target_career = st.text_input(
-            "Enter your desired job title or career:",
-            key="target_career_input",
-            on_change=_on_target_career_enter
-        )
+        target_career = st.text_input("Enter your desired job title or career:", key="target_career_input")
         
-        
-        
-        if st.button("Generate Goal Roadmap", key="goal_roadmap_button") or st.session_state.get("goal_roadmap_trigger"):
-            st.session_state['goal_roadmap_trigger'] = False #reset after Enter key press
-
+        if st.button("Generate Goal Roadmap", key="goal_roadmap_button"):
+            
             if not target_career.strip():
                 st.error("Please enter a job title to generate a roadmap.")
                 st.stop()
@@ -473,10 +455,7 @@ if __name__ == "__main__":
         st.write("**...OR...**")
 
         # 3 Text Area (Paste/Type)
-        pasted_text = st.text_area("Option 2: Paste or type your resume text here:",
-                                   key="resume_text_area",
-                                   on_change=_on_resume_enter
-                                )
+        pasted_text = st.text_area("Option 2: Paste or type your resume text here:")
         
         # 4 Logic to determine the final resume_text
         if uploaded_file is not None:
@@ -505,8 +484,7 @@ if __name__ == "__main__":
             resume_text = pasted_text
             
         # This button triggers the resume analysis logic
-        if st.button("Analyze Resume", key="analyze_button") or st.session_state.get("analyze_trigger"):
-            st.session_state['analyze_trigger'] = False # reset after Enter key press
+        if st.button("Analyze Resume", key="analyze_button"):
             # Check for input
             if not resume_text:
                 st.error("Please upload a file or paste your resume text to analyze.")
@@ -593,9 +571,7 @@ if __name__ == "__main__":
             # No skills available (dry-run / API failure)
             st.info("No skills list available for this job (API may be in dry-run mode or the lookup failed). ")
 
-    #Roadmap button (only shows after job rec in tab 2)
-    if st.session_state['resume_analyzed'] and st.session_state['job_options']:
-        if st.button("Generate Roadmap", key="roadmap_button"):
+    if st.button("Generate Roadmap", key="roadmap_button"):
 
             with st.status(f"Generating career roadmap for **{selected_job}**...", expanded=True):
                 roadmap = generate_roadmap(selected_job)
@@ -603,6 +579,7 @@ if __name__ == "__main__":
             if roadmap:
                 st.session_state['roadmap_text'] = roadmap
                 st.session_state['selected_job_for_roadmap'] = selected_job
+
                 st.rerun()
 
 # This block displays the final roadmap for BOTH tabs
@@ -615,18 +592,12 @@ if st.session_state['roadmap_text']:
     phases = re.split(r'(Phase\s+\d+:)', roadmap_text)
 
     if len(phases) > 1:
-        # Capture the initial text (The introduction is in phases[0])
-        intro_text = phases[0].strip()
-        if intro_text:
-            st.markdown(intro_text)
-            st.markdown("---") 
-
         structured_phases = []
         for i in range(1, len(phases), 2):
             title = phases[i].strip()
             content = phases[i+1].strip() if i+1 < len(phases) else ""
             structured_phases.append((title, content))
-        
+
         # Loop through phases
         for idx, (title, content) in enumerate(structured_phases):
             with st.expander(title, expanded=(idx == 0)):  # Phase 1 auto-open
